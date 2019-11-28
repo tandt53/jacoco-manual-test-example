@@ -1,0 +1,89 @@
+apply plugin: 'com.android.application'
+apply from: '../jacoco-config.gradle'
+apply from: '../sonarqube-config.gradle'
+
+android {
+    compileSdkVersion 27
+    defaultConfig {
+        applicationId "jonceski.kliment.jacococoverageexample"
+        minSdkVersion 16
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    def coverageSourceDirs = [
+            '../app/src/main/java'
+    ]
+
+    buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    task jacocoTestReportEx(type: JacocoReport) {
+        group = "Reporting"
+        description = "Generate Jacoco coverage reports after running tests."
+        reports {
+            xml.enabled = true
+            html.enabled = true
+        }
+        classDirectories = fileTree(
+                dir: './build/intermediates/javac/freeDebug/classes/jonceski/kliment/jacococoverageexample',
+                excludes: ['**/R*.class',
+                           '**/*$InjectAdapter.class',
+                           '**/*$ModuleAdapter.class',
+                           '**/*$ViewInjector*.class'
+                ])
+        sourceDirectories = files(coverageSourceDirs)
+        executionData = files("./coverage.exec")
+        doFirst {
+            new File("$buildDir/intermediates/javac/freeDebug/classes/jonceski/kliment/jacococoverageexample/").eachFileRecurse { file ->
+                if (file.name.contains('$$')) {
+                    file.renameTo(file.path.replace('$$', '$'))
+                }
+            }
+        }
+    }
+
+    // Specifies one flavor dimension.
+    flavorDimensions "version"
+    productFlavors {
+        free {
+            // Assigns this product flavor to the "version" flavor dimension.
+            // This property is optional if you are using only one dimension.
+            dimension "version"
+            applicationIdSuffix ".free"
+            versionNameSuffix "-free"
+        }
+        paid {
+            dimension "version"
+            applicationIdSuffix ".paid"
+            versionNameSuffix "-paid"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestImplementation "com.android.support.test:rules:1.0.2"
+
+    testFreeImplementation 'junit:junit:4.12'
+    androidTestFreeImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestFreeImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestFreeImplementation "com.android.support.test:rules:1.0.2"
+
+    testPaidImplementation 'junit:junit:4.12'
+    androidTestPaidImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestPaidImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestPaidImplementation "com.android.support.test:rules:1.0.2"
+}
